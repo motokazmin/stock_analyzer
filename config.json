@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "Stock Analyzer",
+    "version": "1.0.0",
+    "language": "ru"
+  },
+  "watchlist": [
+    "SBER",
+    "GAZP",
+    "LKOH",
+    "NVTK",
+    "TATN"
+  ],
+  "folders": {
+    "data_folder": "stock_data",
+    "reports_folder": "reports",
+    "logs_folder": "logs"
+  },
+  "analysis": {
+    "period_months": 6,
+    "min_data_points": 60,
+    "ema_periods": [
+      20,
+      50,
+      200
+    ],
+    "rsi_period": 14,
+    "volume_bins": 20,
+    "support_resistance_window": 20
+  },
+  "key_levels": {
+    "SBER": {
+      "support": [
+        265,
+        275
+      ],
+      "resistance": [
+        290,
+        305
+      ],
+      "notes": "Важные уровни для Сбербанка"
+    },
+    "GAZP": {
+      "support": [
+        140,
+        150
+      ],
+      "resistance": [
+        170,
+        180
+      ],
+      "notes": "Важные уровни для Газпрома"
+    },
+    "LKOH": {
+      "support": [
+        1800,
+        1900
+      ],
+      "resistance": [
+        2100,
+        2200
+      ],
+      "notes": "Важные уровни для Лукойла"
+    },
+    "NVTK": {
+      "support": [
+        100,
+        110
+      ],
+      "resistance": [
+        130,
+        145
+      ],
+      "notes": "Важные уровни для Новатэка"
+    },
+    "TATN": {
+      "support": [
+        280,
+        300
+      ],
+      "resistance": [
+        350,
+        380
+      ],
+      "notes": "Важные уровни для Татнефти"
+    }
+  },
+  "trading": {
+    "min_rsi_for_buy": 30,
+    "max_rsi_for_sell": 70,
+    "min_volume_multiplier": 1.2,
+    "risk_reward_ratio": 1.5
+  },
+  "reporting": {
+    "format": "markdown",
+    "include_detailed_analysis": true,
+    "include_entry_exit_points": true,
+    "theme": "default"
+  },
+  "last_updated": "2025-11-13T19:33:36.606829",
+  "last_report": "2025-11-13T19:34:30.873639",
+  "settings": {
+    "auto_update": false,
+    "update_interval_hours": 4,
+    "save_history": true,
+    "verbose_logging": false
+  }
+}
