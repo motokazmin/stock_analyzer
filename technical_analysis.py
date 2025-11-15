@@ -17,6 +17,13 @@ try:
 except ImportError:
     TA_LIB_AVAILABLE = False
 
+# Импортируем ConfigManager для получения уровней из конфига
+try:
+    from config_manager import ConfigManager
+    CONFIG_MANAGER_AVAILABLE = True
+except ImportError:
+    CONFIG_MANAGER_AVAILABLE = False
+
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -126,25 +133,54 @@ class TechnicalAnalyzer:
             return {}
 
         try:
+            current_price = df['CLOSE'].iloc[-1]
+            
             # Находим локальные максимумы (сопротивление)
             resistance_levels = []
             for i in range(window, len(df) - window):
                 if df['HIGH'].iloc[i] == df['HIGH'].iloc[i - window:i + window].max():
-                    resistance_levels.append(df['HIGH'].iloc[i])
+                    # Берем только уровни выше текущей цены
+                    if df['HIGH'].iloc[i] > current_price:
+                        resistance_levels.append(df['HIGH'].iloc[i])
 
             # Находим локальные минимумы (поддержка)
             support_levels = []
             for i in range(window, len(df) - window):
                 if df['LOW'].iloc[i] == df['LOW'].iloc[i - window:i + window].min():
-                    support_levels.append(df['LOW'].iloc[i])
+                    # Берем только уровни ниже текущей цены
+                    if df['LOW'].iloc[i] < current_price:
+                        support_levels.append(df['LOW'].iloc[i])
 
-            # Берем средние значения
-            resistance = np.mean(resistance_levels) if resistance_levels else None
-            support = np.mean(support_levels) if support_levels else None
+            # Если уровней нет, берем ближайшие к цене
+            if not resistance_levels:
+                # Ищем ближайший максимум выше цены
+                highs_above = df[df['HIGH'] > current_price]['HIGH']
+                if not highs_above.empty:
+                    resistance_levels = [highs_above.min()]
+            
+            if not support_levels:
+                # Ищем ближайший минимум ниже цены
+                lows_below = df[df['LOW'] < current_price]['LOW']
+                if not lows_below.empty:
+                    support_levels = [lows_below.max()]
+
+            # Берем средние значения (или ближайшие уровни)
+            if resistance_levels:
+                # Берем 2-3 ближайших уровня сопротивления
+                resistance = np.mean(sorted(resistance_levels)[:3]) if len(resistance_levels) >= 3 else np.mean(resistance_levels)
+            else:
+                resistance = None
+            
+            if support_levels:
+                # Берем 2-3 ближайших уровня поддержки
+                support = np.mean(sorted(support_levels, reverse=True)[:3]) if len(support_levels) >= 3 else np.mean(support_levels)
+            else:
+                support = None
 
             result = {
                 'support': support,
                 'resistance': resistance,
+                'current_price': current_price,
                 'support_levels_count': len(support_levels),
                 'resistance_levels_count': len(resistance_levels)
             }
@@ -319,7 +355,31 @@ class TechnicalAnalyzer:
             df = analyzer.calculate_rsi(df, period=14)
 
             # 3. Поддержка/сопротивление
+            # ВАРИАНТ 1: Приоритет конфигу
             support_resistance = analyzer.find_support_resistance(df, window=20)
+            
+            # Проверяем наличие ручных уровней в конфиге
+            if CONFIG_MANAGER_AVAILABLE:
+                try:
+                    config_levels = ConfigManager.get_key_levels(ticker)
+                    if config_levels:
+                        # Если есть значения в поддержке
+                        if config_levels.get('support') and len(config_levels.get('support', [])) > 0:
+                            support = np.mean(config_levels['support'])
+                            support_resistance['support'] = support
+                            logger.info(f"[{ticker}] Используются ручные уровни поддержки: {config_levels['support']}")
+                        
+                        # Если есть значения в сопротивлении
+                        if config_levels.get('resistance') and len(config_levels.get('resistance', [])) > 0:
+                            resistance = np.mean(config_levels['resistance'])
+                            support_resistance['resistance'] = resistance
+                            logger.info(f"[{ticker}] Используются ручные уровни сопротивления: {config_levels['resistance']}")
+                        
+                        # Если есть пометка источника
+                        if config_levels.get('notes'):
+                            support_resistance['source'] = config_levels['notes']
+                except Exception as e:
+                    logger.warning(f"Не удалось получить уровни из конфига для {ticker}: {e}")
 
             # 4. Тренд
             trend_analysis = analyzer.detect_trend(df)

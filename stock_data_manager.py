@@ -207,14 +207,22 @@ class StockDataManager:
         # Конвертируем дату
         df['DATE'] = pd.to_datetime(df['DATE'])
         
+        # Удаляем строки с нулевым объемом (дни без торговли)
+        df = df[df['VOLUME'] > 0]
+        logger.info(f"После удаления дней без торговли: {len(df)} записей")
+        
         # Фильтруем по датам если указаны
         if from_date:
             from_dt = pd.to_datetime(from_date)
+            before_filter = len(df)
             df = df[df['DATE'] >= from_dt]
+            logger.info(f"После фильтра по дате >= {from_date}: {len(df)} записей (было {before_filter})")
         
         if to_date:
             to_dt = pd.to_datetime(to_date)
+            before_filter = len(df)
             df = df[df['DATE'] <= to_dt]
+            logger.info(f"После фильтра по дате <= {to_date}: {len(df)} записей (было {before_filter})")
         
         # Сортируем по дате
         df = df.sort_values('DATE').reset_index(drop=True)
@@ -248,6 +256,43 @@ class StockDataManager:
         merged_df = merged_df.sort_values('DATE').reset_index(drop=True)
         
         return merged_df
+
+    def _clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Очищает данные: удаляет дубли дат и дни без торговли.
+        
+        Args:
+            df: DataFrame для очистки
+            
+        Returns:
+            Очищенный DataFrame
+        """
+        try:
+            # Шаг 1: Удаляем дни без торговли (VOLUME=0)
+            before_volume = len(df)
+            df = df[df['VOLUME'] > 0]
+            volume_removed = before_volume - len(df)
+            if volume_removed > 0:
+                logger.info(f"  🧹 Удалены дни без торговли: {volume_removed} строк")
+            
+            # Шаг 2: Удаляем дубли дат (две сессии торговли РПС + T+0)
+            # Берем сессию с большим объемом (основная T+0)
+            if df.duplicated(subset=['DATE']).any():
+                before_dups = len(df)
+                # Сортируем по дате и объему (убывание), затем берем первую (max volume)
+                df = df.sort_values(['DATE', 'VOLUME'], ascending=[True, False])
+                df = df.drop_duplicates(subset=['DATE'], keep='first')
+                dups_removed = before_dups - len(df)
+                logger.info(f"  ✅ Объединены двойные сессии: {dups_removed} удалено")
+            
+            # Шаг 3: Сортируем по дате
+            df = df.sort_values('DATE').reset_index(drop=True)
+            
+            return df
+        
+        except Exception as e:
+            logger.error(f"Ошибка при очистке данных: {e}")
+            return df
 
     def save_to_csv(self, ticker: str, data: pd.DataFrame) -> bool:
         """
@@ -328,7 +373,11 @@ class StockDataManager:
                 else:
                     merged_data = new_data
                 
-                # Сохраняем данные
+                # Очищаем данные (удаляем дубли и дни без торговли)
+                logger.info(f"🔧 Очистка данных {ticker}:")
+                merged_data = self._clean_data(merged_data)
+                
+                # Сохраняем очищенные данные
                 success = self.save_to_csv(ticker, merged_data)
                 results[ticker] = success
                 

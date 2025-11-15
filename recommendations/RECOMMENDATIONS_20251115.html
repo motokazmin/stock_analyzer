@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Торговые Рекомендации 15.11.2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            color: #666;
+            font-size: 0.95em;
+            flex-wrap: wrap;
+        }
+        
+        .header-info span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        nav {
+            background: white;
+            padding: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 15px;
+            gap: 10px;
+        }
+        
+        nav a {
+            display: inline-block;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        nav a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        section h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-content {
+            padding: 30px;
+        }
+        
+        .stock-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .stock-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .ticker {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .price-info {
+            display: flex;
+            gap: 20px;
+            font-size: 0.95em;
+        }
+        
+        .price {
+            color: #666;
+        }
+        
+        .change-positive {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        
+        .change-negative {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        .signal {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        .signal-buy {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .signal-hold {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .signal-sell {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .stock-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        .detail-value {
+            color: #1e3c72;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .plan {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .plan-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .badge-top {
+            background: #fbbf24;
+            color: #92400e;
+        }
+        
+        .badge-watch {
+            background: #60a5fa;
+            color: white;
+        }
+        
+        .badge-avoid {
+            background: #f87171;
+            color: white;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .summary-box h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .summary-box .number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .verdict {
+            background: #dcfce7;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: 600;
+            color: #166534;
+        }
+        
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: 600;
+            color: #991b1b;
+        }
+        
+        .info {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            color: #1e40af;
+        }
+        
+        footer {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .stars {
+            color: #fbbf24;
+            font-size: 1.2em;
+        }
+        
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+            }
+            
+            nav a {
+                width: 100%;
+            }
+            
+            .header-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Торговые Рекомендации</h1>
+            <div class="header-info">
+                <span>📅 Дата: 15 ноября 2025</span>
+                <span>📊 Период: 10-15 ноября</span>
+                <span>👤 Аналитик: LLM Portfolio Analyst</span>
+                <span>📌 Акций: 38</span>
+            </div>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="#rating">🏆 Рейтинг</a></li>
+                <li><a href="#top5">🥇 ТОП-5</a></li>
+                <li><a href="#watch">👀 Наблюдение</a></li>
+                <li><a href="#avoid">🚫 Избегать</a></li>
+                <li><a href="#summary">📋 Итоги</a></li>
+            </ul>
+        </nav>
+
+        <!-- РЕЙТИНГ АКЦИЙ -->
+        <section id="rating">
+            <h2>🏆 Общий Рейтинг Акций</h2>
+            <div class="section-content">
+                <table>
+                    <tr>
+                        <th>#</th>
+                        <th>Тикер</th>
+                        <th>Цена</th>
+                        <th>Изм%</th>
+                        <th>RSI</th>
+                        <th>Тренд</th>
+                        <th>Сигнал</th>
+                        <th>Скор</th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>DELI</strong></td>
+                        <td>122.15 ₽</td>
+                        <td class="change-negative">-42.9%</td>
+                        <td>69</td>
+                        <td>📈 UP</td>
+                        <td><span class="signal signal-buy">BUY</span></td>
+                        <td><strong>80</strong></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>SBER</strong></td>
+                        <td>297.44 ₽</td>
+                        <td class="change-positive">+16.8%</td>
+                        <td>69</td>
+                        <td>📈 UP</td>
+                        <td><span class="signal signal-buy">BUY</span></td>
+                        <td><strong>65</strong></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>LENT</strong></td>
+                        <td>1769.50 ₽</td>
+                        <td class="change-positive">+69.7%</td>
+                        <td>74</td>
+                        <td>📈 UP</td>
+                        <td><span class="signal signal-hold">HOLD</span></td>
+                        <td><strong>30</strong></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><strong>X5</strong></td>
+                        <td>2702.50 ₽</td>
+                        <td class="change-negative">-3.6%</td>
+                        <td>74</td>
+                        <td>📈 UP</td>
+                        <td><span class="signal signal-hold">HOLD</span></td>
+                        <td><strong>40</strong></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><strong>PHOR</strong></td>
+                        <td>6644.00 ₽</td>
+                        <td class="change-positive">+22.3%</td>
+                        <td>35</td>
+                        <td>📉 DOWN</td>
+                        <td><span class="signal signal-hold">HOLD</span></td>
+                        <td><strong>0</strong></td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td colspan="7" style="text-align: center; color: #999;">И ещё 33 акции (всего 38)</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- ТОП-5 ВОЗМОЖНОСТИ -->
+        <section id="top5">
+            <h2>🥇 ТОП-5 Лучшие Возможности</h2>
+            <div class="section-content">
+                
+                <!-- LENT -->
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">LENT <span class="badge badge-top">★★★★</span></span>
+                        <span class="price-info">
+                            <span class="price">1769.50 ₽</span>
+                            <span class="change-positive">+69.7%</span>
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Сигнал</div>
+                            <div class="detail-value">🟡 HOLD (скор: 30)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Тренд</div>
+                            <div class="detail-value">📈 UP (MODERATE)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">RSI</div>
+                            <div class="detail-value">73.54 (ПЕРЕКУПЛЕНО)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Компания</div>
+                            <div class="detail-value">Лента (ритейл)</div>
+                        </div>
+                    </div>
+                    <div class="plan">
+                        <div class="plan-title">📊 Почему это ТОП-1?</div>
+                        <ul style="margin-left: 20px; color: #333;">
+                            <li>🚀 Восстановление на 69.7% — почти триплинг!</li>
+                            <li>✅ Выше всех МА (20, 50, 200) — правильная динамика</li>
+                            <li>⚠️ RSI 73.54 высокий, но объёмы растут</li>
+                            <li>📈 Консолидация последние 3 дня = подготовка к новому росту</li>
+                        </ul>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Вариант входа</th>
+                            <th>Цена</th>
+                            <th>Действие</th>
+                        </tr>
+                        <tr>
+                            <td>🔴 Агрессивный</td>
+                            <td>1769.50 ₽</td>
+                            <td>Войти сейчас</td>
+                        </tr>
+                        <tr>
+                            <td>🟡 Консервативный</td>
+                            <td>1700-1720 ₽</td>
+                            <td>На откате к MA20</td>
+                        </tr>
+                        <tr>
+                            <td>🟢 Безопасный</td>
+                            <td>1600-1650 ₽</td>
+                            <td>На коррекции, RSI < 60</td>
+                        </tr>
+                    </table>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;">
+                        <div class="detail-item">
+                            <div class="detail-label">Цель 1</div>
+                            <div class="detail-value">1899.50 ₽ (+7.3%)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Цель 2</div>
+                            <div class="detail-value">2138.00 ₽ (+20.8%)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Стоп-лосс</div>
+                            <div class="detail-value">1722 ₽ (-2%)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Риск</div>
+                            <div class="detail-value">Низкий</div>
+                        </div>
+                    </div>
+                    <div class="verdict">✅ ПОКУПАЙТЕ на консервативном откате к 1700₽</div>
+                </div>
+
+                <!-- SBER -->
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">SBER <span class="badge badge-top">★★★★</span></span>
+                        <span class="price-info">
+                            <span class="price">297.44 ₽</span>
+                            <span class="change-positive">+16.8%</span>
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Сигнал</div>
+                            <div class="detail-value">🟢 BUY (скор: 65)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Тренд</div>
+                            <div class="detail-value">📈 UP (MODERATE)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">RSI</div>
+                            <div class="detail-value">68.96</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Компания</div>
+                            <div class="detail-value">Сбербанк</div>
+                        </div>
+                    </div>
+                    <div class="plan">
+                        <div class="plan-title">📊 План входа</div>
+                        Консервативный вход: **293-295 ₽** на откате к 20-дневной МА
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div class="detail-item">
+                            <div class="detail-label">Цель 1</div>
+                            <div class="detail-value">324.97 ₽ (+9.3%)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Цель 2</div>
+                            <div class="detail-value">349.02 ₽ (+17.3%)</div>
+                        </div>
+                    </div>
+                    <div class="verdict">✅ Сильный восходящий тренд, ПОКУПАЙТЕ</div>
+                </div>
+
+                <!-- X5 -->
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">X5 <span class="badge badge-top">★★★</span></span>
+                        <span class="price-info">
+                            <span class="price">2702.50 ₽</span>
+                            <span class="change-negative">-3.6%</span>
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Сигнал</div>
+                            <div class="detail-value">🟡 HOLD (скор: 40)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Тренд</div>
+                            <div class="detail-value">📈 UP (MODERATE)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">RSI</div>
+                            <div class="detail-value">74.48 (перекуплено)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Компания</div>
+                            <div class="detail-value">X5 Retail Group (лидер ритейла)</div>
+                        </div>
+                    </div>
+                    <div class="plan">
+                        <div class="plan-title">📊 Лучший ритейл акционер</div>
+                        Дождитесь отката к <strong>2550 ₽</strong>, затем покупайте для долгосрока
+                    </div>
+                    <div class="verdict">✅ Долгосрок, качественная компания</div>
+                </div>
+
+                <!-- PHOR -->
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">PHOR <span class="badge badge-top">★★</span></span>
+                        <span class="price-info">
+                            <span class="price">6644.00 ₽</span>
+                            <span class="change-positive">+22.3%</span>
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Сигнал</div>
+                            <div class="detail-value">🟡 HOLD</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Тренд</div>
+                            <div class="detail-value">📉 DOWN (но растёт!)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">RSI</div>
+                            <div class="detail-value">34.76 (перепродано!)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Компания</div>
+                            <div class="detail-value">ФосАгро (удобрения)</div>
+                        </div>
+                    </div>
+                    <div class="plan">
+                        <div class="plan-title">💰 Дивидендная акция</div>
+                        +22.3% восстановление на нисходящем тренде = скрытая сила. Дивиденды ~10%
+                    </div>
+                    <div class="verdict">✅ Начните позицию на текущих уровнях для долгосрока</div>
+                </div>
+
+                <!-- OZON -->
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">OZON <span class="badge badge-top">★★</span></span>
+                        <span class="price-info">
+                            <span class="price">3914.00 ₽</span>
+                            <span class="change-positive">+19.7%</span>
+                        </span>
+                    </div>
+                    <div class="stock-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Сигнал</div>
+                            <div class="detail-value">🟡 HOLD (скор: 10)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Тренд</div>
+                            <div class="detail-value">📉 DOWN (STRONG)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">RSI</div>
+                            <div class="detail-value">18.39 (!!! ПЕРЕПРОДАНО)</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Компания</div>
+                            <div class="detail-value">Озон (e-commerce)</div>
+                        </div>
+                    </div>
+                    <div class="plan">
+                        <div class="plan-title">📊 Потенциал восстановления</div>
+                        RSI 18 — экстремально перепродано. Ждём подтверждения отскока
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Вариант входа</th>
+                            <th>Цена</th>
+                            <th>Действие</th>
+                        </tr>
+                        <tr>
+                            <td>🟡 Консервативный</td>
+                            <td>3700-3750 ₽</td>
+                            <td>На откате вниз</td>
+                        </tr>
+                        <tr>
+                            <td>🟢 Лучший вариант</td>
+                            <td>3500-3600 ₽</td>
+                            <td>Близко к поддержке</td>
+                        </tr>
+                    </table>
+                    <div class="verdict">✅ HOLD + ждём отскока. RSI крайне перепродан</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- АКЦИИ ДЛЯ НАБЛЮДЕНИЯ -->
+        <section id="watch">
+            <h2>👀 Акции Для Наблюдения</h2>
+            <div class="section-content">
+                
+                <div class="summary-grid">
+                    <div class="summary-box">
+                        <h3>GMKN</h3>
+                        <div class="number">123.90 ₽</div>
+                        <div>+7.6% | Палладий/Никель</div>
+                    </div>
+                    <div class="summary-box">
+                        <h3>MTSS</h3>
+                        <div class="number">204.40 ₽</div>
+                        <div>+3.2% | Телеком</div>
+                    </div>
+                    <div class="summary-box">
+                        <h3>MOEX</h3>
+                        <div class="number">162.68 ₽</div>
+                        <div>-22.2% | Биржа</div>
+                    </div>
+                    <div class="summary-box">
+                        <h3>SFIN</h3>
+                        <div class="number">1386.80 ₽</div>
+                        <div>-6.0% | IT</div>
+                    </div>
+                </div>
+
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">GMKN</span>
+                        <span class="price-info">123.90 ₽ | +7.6%</span>
+                    </div>
+                    <div class="detail-item" style="margin: 10px 0;">
+                        <strong>📊 Палладий/никель компания</strong><br>
+                        Объёмы ОГРОМНЫЕ (25M контрактов/день). Хороший вариант для долгосрока. <strong>Потенциал:</strong> До 155 ₽ (+25.5%)
+                    </div>
+                </div>
+
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">MTSS</span>
+                        <span class="price-info">204.40 ₽ | +3.2%</span>
+                    </div>
+                    <div class="detail-item" style="margin: 10px 0;">
+                        <strong>📞 Стабильный телеком</strong><br>
+                        МТС - мобильный оператор. Целевой уровень: 242 ₽ (+18.7%). Дивидендная, долгосроковая позиция.
+                    </div>
+                </div>
+
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <span class="ticker">SFIN</span>
+                        <span class="price-info">1386.80 ₽ | -6.0%</span>
+                    </div>
+                    <div class="detail-item" style="margin: 10px 0;">
+                        <strong>⚠️ ОСТОРОЖНО: RSI 85.26 — ПЕРЕКУПЛЕНО</strong><br>
+                        Сильный восходящий тренд, но RSI требует внимания. Дождитесь коррекции RSI < 50. Потенциал: До 1684 ₽ (+21.5%)
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- АКЦИИ ДЛЯ ИЗБЕГАНИЯ -->
+        <section id="avoid">
+            <h2>🚫 Акции Для Избегания (Сейчас)</h2>
+            <div class="section-content">
+                
+                <div class="summary-grid">
+                    <div style="background: #fee2e2; padding: 20px; border-radius: 10px; color: #991b1b;">
+                        <h3 style="margin-bottom: 10px;">MGNT</h3>
+                        <div class="number" style="color: #991b1b;">-40.9%</div>
+                        <div>Слишком упала, слишком быстро</div>
+                    </div>
+                    <div style="background: #fee2e2; padding: 20px; border-radius: 10px; color: #991b1b;">
+                        <h3 style="margin-bottom: 10px;">DIAS</h3>
+                        <div class="number" style="color: #991b1b;">-59.3%</div>
+                        <div>Экстремально, риск полного отката</div>
+                    </div>
+                    <div style="background: #fee2e2; padding: 20px; border-radius: 10px; color: #991b1b;">
+                        <h3 style="margin-bottom: 10px;">ASTR</h3>
+                        <div class="number" style="color: #991b1b;">RSI 71.89</div>
+                        <div>Перекуплено, дождитесь RSI < 50</div>
+                    </div>
+                    <div style="background: #fee2e2; padding: 20px; border-radius: 10px; color: #991b1b;">
+                        <h3 style="margin-bottom: 10px;">VKCO</h3>
+                        <div class="number" style="color: #991b1b;">RSI 71.06</div>
+                        <div>Перекуплено, ждём коррекции</div>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    ⚠️ <strong>Перекуплено (RSI > 70):</strong> SVCB (77.68), ASTR (71.89), VKCO (71.06), X5 (74.48), LENT (73.54)
+                </div>
+
+                <div class="warning">
+                    ⚠️ <strong>Сильное падение:</strong> MGNT (-40.9%), DIAS (-59.3%), LKOH (-26.1%)
+                </div>
+
+                <div class="info">
+                    💡 <strong>Рекомендация:</strong> Дождитесь RSI < 50 перед входом в перекупленные акции. Для упавших акций ждём подтверждения дна.
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ИТОГИ И СТРАТЕГИЯ -->
+        <section id="summary">
+            <h2>📋 Итоги и Портфельная Стратегия</h2>
+            <div class="section-content">
+                
+                <h3 style="margin: 20px 0 15px; color: #667eea;">Рекомендации на Неделю 18-22 ноября:</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="detail-item">
+                        <div class="detail-label">🔴 АГРЕССИВНЫЙ (для трейдеров)</div>
+                        <ul style="margin-left: 15px; margin-top: 10px; color: #333;">
+                            <li>SBER (297 ₽) - BUY</li>
+                            <li>LENT (1700 ₽) - дождитесь отката</li>
+                            <li>OZON (3600-3700 ₽) - ждём подтверждения</li>
+                        </ul>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">🟢 КОНСЕРВАТИВНЫЙ (для инвесторов)</div>
+                        <ul style="margin-left: 15px; margin-top: 10px; color: #333;">
+                            <li>X5 (2550 ₽) - ритейл лидер</li>
+                            <li>MTSS (200 ₽) - телеком</li>
+                            <li>PHOR (6644 ₽) - дивидендная</li>
+                            <li>MOEX (160 ₽) - долгосрок</li>
+                        </ul>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">🎲 СПЕКУЛЯТИВНЫЙ (высокий риск)</div>
+                        <ul style="margin-left: 15px; margin-top: 10px; color: #333;">
+                            <li>MAGN (24 ₽) - восстановление</li>
+                            <li>GMKN (123 ₽) - редкие материалы</li>
+                            <li>AFLT (50 ₽) - авиация</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="margin: 20px 0 15px; color: #667eea;">📊 Главные Сигналы для Входа:</h3>
+                
+                <div class="verdict">
+                    ✅ <strong>ВХОДИТЬ КОГДА:</strong>
+                    <ul style="margin-left: 15px; margin-top: 10px;">
+                        <li>RSI выходит из перекупленности (< 70)</li>
+                        <li>Цена на откате к 20-дневной МА</li>
+                        <li>Объёмы растут на восходящих движениях</li>
+                        <li>Два-три дня подряд выше открытия</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    ❌ <strong>НЕ ВХОДИТЬ КОГДА:</strong>
+                    <ul style="margin-left: 15px; margin-top: 10px;">
+                        <li>RSI > 80 или < 20 (опасные крайности)</li>
+                        <li>Цена падает ниже 50-дневной МА</li>
+                        <li>Объёмы падают на восходящих движениях</li>
+                        <li>Один день рост — не значит тренд</li>
+                    </ul>
+                </div>
+
+                <div class="info" style="margin-top: 15px;">
+                    📌 <strong>Помните:</strong> Стоп-лосс всегда в 2% от входа. Берите прибыль на первой цели (50% позиции), остальное катите до второй цели.
+                </div>
+
+            </div>
+        </section>
+
+        <footer>
+            <p>✅ Анализ создан: <strong>15 ноября 2025</strong></p>
+            <p>🔍 Метод: Проверка CSV + Отчёты + Реальная динамика</p>
+            <p>📅 Следующее обновление ожидается: <strong>18-19 ноября 2025</strong></p>
+            <p style="margin-top: 15px; color: #999; font-size: 0.85em;">
+                ⚠️ Данная информация имеет информационный характер. Перед торговлей проведите собственный анализ.
+            </p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
+

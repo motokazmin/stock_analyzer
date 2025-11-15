@@ -393,14 +393,12 @@ crontab -e
 
 # Добавить строки:
 
-# Ежедневно в 11:00
-0 11 * * * cd /home/roman/projects/ai/stock_analyzer && python main.py update && python main.py analyze
+# Каждый день после торгов (19:00)
+0 19 * * * cd /home/roman/projects/ai/stock_analyzer && python main.py update && python main.py analyze
 
-# Каждые 4 часа
-0 */4 * * * cd /home/roman/projects/ai/stock_analyzer && python main.py update
-
-# Каждый день в разное время
+# Или два раза в день (утро и вечер)
 0 9 * * * cd /home/roman/projects/ai/stock_analyzer && python main.py analyze
+0 19 * * * cd /home/roman/projects/ai/stock_analyzer && python main.py update && python main.py analyze
 ```
 
 ### Windows: Task Scheduler
