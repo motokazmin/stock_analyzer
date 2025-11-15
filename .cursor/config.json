@@ -1,0 +1,68 @@
+{
+  "name": "Stock Analyzer",
+  "description": "Система анализа акций Московской биржи с техническим анализом и торговыми рекомендациями",
+  "rules": ".cursorules",
+  "language": "python",
+  "python_version": "3.8+",
+  "code_style": "PEP 8",
+  "max_line_length": 120,
+  "type_hints": true,
+  "docstrings_language": "russian",
+  "key_technologies": [
+    "pandas",
+    "numpy",
+    "ta (ta-library)",
+    "requests",
+    "HTML5"
+  ],
+  "data_sources": [
+    "Moex ISS API"
+  ],
+  "output_formats": [
+    "CSV (stock data)",
+    "Markdown (reports)",
+    "HTML (recommendations and audit)",
+    "JSON (config, archive)"
+  ],
+  "key_modules": {
+    "stock_data_manager.py": "Data download and management from Moex ISS API",
+    "technical_analysis.py": "Technical indicators using ta-library",
+    "report_generator.py": "Markdown report generation",
+    "audit_manager.py": "Recommendation tracking and validation",
+    "audit_report_generator.py": "HTML audit report generation",
+    "main.py": "CLI interface",
+    "config_manager.py": "Configuration management"
+  },
+  "workflows": [
+    {
+      "name": "Update Data",
+      "command": "python main.py update",
+      "description": "Download and update stock data from Moex ISS API"
+    },
+    {
+      "name": "Analyze",
+      "command": "python main.py analyze",
+      "description": "Perform technical analysis and generate Markdown reports"
+    },
+    {
+      "name": "Generate Recommendations",
+      "description": "Use AI to generate HTML recommendations based on reports and CSV data",
+      "input_files": [
+        "reports/report_*.md",
+        "stock_data/*.csv"
+      ],
+      "output_file": "recommendations/RECOMMENDATIONS_YYYYMMDD.html",
+      "template": ".cursorules"
+    },
+    {
+      "name": "Audit",
+      "command": "python main.py audit",
+      "description": "Check past recommendations against new data and generate audit HTML report"
+    }
+  ],
+  "ai_instructions": {
+    "file": "promt.txt",
+    "target": "Generate HTML recommendations matching .cursorules template"
+  }
+}
+

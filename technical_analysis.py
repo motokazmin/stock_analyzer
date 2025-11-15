@@ -10,12 +10,8 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# Попытаемся импортировать ta-lib если доступна
-try:
-    import ta
-    TA_LIB_AVAILABLE = True
-except ImportError:
-    TA_LIB_AVAILABLE = False
+# Импортируем ta-library (обязательна!)
+import ta
 
 # Импортируем ConfigManager для получения уровней из конфига
 try:
@@ -34,84 +30,164 @@ class TechnicalAnalyzer:
 
     def __init__(self):
         """Инициализация анализатора."""
-        logger.info(f"TA-lib доступна: {TA_LIB_AVAILABLE}")
+        pass
 
     @staticmethod
-    def calculate_ema(df: pd.DataFrame, periods: List[int] = [20, 50, 200]) -> pd.DataFrame:
+    def is_false_recovery(df: pd.DataFrame) -> Tuple[bool, List[str]]:
         """
-        Рассчитывает экспоненциальное скользящее среднее (EMA).
-
+        Обнаруживает ЛОЖНЫЕ восстановления (отскоки от дна).
+        
+        Использует 5 независимых индикаторов ta-library для проверки:
+        1. ADX двойной (14 и 50 периоды) - сравнение краткосроч и долгосроч тренда
+        2. MACD дивергенция - расхождение цены и индикатора
+        3. OBV (объёмы) - подтверждение рост объёмом
+        4. RSI - перекупленность после падения
+        5. Bollinger Bands - цена на экстремуме
+        
         Args:
-            df: DataFrame с колонкой CLOSE
-            periods: Список периодов для EMA
-
+            df: DataFrame с колонками CLOSE, HIGH, LOW, VOLUME
+            
         Returns:
-            DataFrame исходный + колонки с EMA_20, EMA_50, EMA_200 и т.д.
+            (is_false: bool, reasons: List[str])
+            - is_false: True если это ложный отскок
+            - reasons: список причин исключения
         """
-        df = df.copy()
-
-        if 'CLOSE' not in df.columns:
-            logger.error("DataFrame должен содержать колонку CLOSE")
-            return df
-
-        for period in periods:
-            col_name = f'EMA_{period}'
-            try:
-                if TA_LIB_AVAILABLE:
-                    df[col_name] = ta.trend.ema_indicator(
-                        close=df['CLOSE'],
-                        window=period,
-                        fillna=True
-                    )
-                else:
-                    # Реализация EMA без ta-lib
-                    df[col_name] = df['CLOSE'].ewm(span=period, adjust=False).mean()
-
-                logger.info(f"EMA_{period} рассчитана")
-            except Exception as e:
-                logger.error(f"Ошибка при расчете EMA_{period}: {e}")
-
-        return df
-
-    @staticmethod
-    def calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
-        """
-        Рассчитывает индекс относительной силы (RSI).
-
-        Args:
-            df: DataFrame с колонкой CLOSE
-            period: Период для расчета (обычно 14)
-
-        Returns:
-            DataFrame с колонкой RSI
-        """
-        df = df.copy()
-
-        if 'CLOSE' not in df.columns:
-            logger.error("DataFrame должен содержать колонку CLOSE")
-            return df
-
+        if len(df) < 50:
+            logger.debug(f"Недостаточно данных для анализа ложного отскока: {len(df)} < 50")
+            return False, []
+        
         try:
-            if TA_LIB_AVAILABLE:
-                df['RSI'] = ta.momentum.rsi(
-                    close=df['CLOSE'],
-                    window=period,
-                    fillna=True
-                )
-            else:
-                # Реализация RSI без ta-lib
-                delta = df['CLOSE'].diff()
-                gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-                loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-
-                rs = gain / loss
-                df['RSI'] = 100 - (100 / (1 + rs))
-
-            logger.info(f"RSI (период {period}) рассчитана")
+            reasons = []
+            close = df['CLOSE'].values
+            high = df['HIGH'].values
+            low = df['LOW'].values
+            volume = df['VOLUME'].values
+            
+            # ════════════════════════════════════════════════════════════
+            # 1️⃣ ADX ДВОЙНОЙ - Сравнение краткосроч и долгосроч тренда
+            # ════════════════════════════════════════════════════════════
+            try:
+                adx_14 = ta.trend.adx(pd.Series(high), pd.Series(low), pd.Series(close), window=14)
+                adx_50 = ta.trend.adx(pd.Series(high), pd.Series(low), pd.Series(close), window=50)
+                
+                adx_14_val = float(adx_14.iloc[-1]) if not pd.isna(adx_14.iloc[-1]) else 0
+                adx_50_val = float(adx_50.iloc[-1]) if not pd.isna(adx_50.iloc[-1]) else 0
+                
+                # Если долгосроч тренда нет, а краткосроч сильный - подозрительно!
+                # ADX > 25 = сильный тренд, ADX < 15 = нет тренда
+                if adx_50_val < 15 and adx_14_val > 25:
+                    reasons.append(f"ADX: долгосроч тренда нет (ADX-50={adx_50_val:.1f}), но краткосроч сильный (ADX-14={adx_14_val:.1f})")
+                    logger.warning(f"  ⚠️ ADX расхождение: ADX-50={adx_50_val:.1f} vs ADX-14={adx_14_val:.1f}")
+                    
+            except Exception as e:
+                logger.debug(f"Ошибка при расчёте ADX: {e}")
+            
+            # ════════════════════════════════════════════════════════════
+            # 2️⃣ MACD - Проверка дивергенции (цена растёт, MACD падает)
+            # ════════════════════════════════════════════════════════════
+            try:
+                macd = ta.trend.macd(pd.Series(close))
+                
+                # Сравниваем направления: цена vs MACD за последние 30 дней
+                price_30_days_ago = close[-30] if len(close) >= 30 else close[0]
+                macd_30_days_ago = macd.iloc[-30] if len(macd) >= 30 else macd.iloc[0]
+                
+                price_direction = "up" if close[-1] > price_30_days_ago else "down"
+                macd_direction = "up" if macd.iloc[-1] > macd_30_days_ago else "down"
+                
+                # Дивергенция: цена растёт, но MACD падает!
+                if price_direction == "up" and macd_direction == "down":
+                    reasons.append(f"MACD дивергенция: цена растёт, но MACD падает")
+                    logger.warning(f"  ⚠️ MACD дивергенция обнаружена")
+                    
+            except Exception as e:
+                logger.debug(f"Ошибка при расчёте MACD: {e}")
+            
+            # ════════════════════════════════════════════════════════════
+            # 3️⃣ OBV (On-Balance Volume) - Подтверждение объёмом
+            # ════════════════════════════════════════════════════════════
+            try:
+                obv = ta.volume.on_balance_volume(pd.Series(close), pd.Series(volume))
+                obv_ma = obv.rolling(window=30).mean()
+                
+                # Если цена растёт (последние 30 дней), но OBV падает - объём не подтверждает!
+                price_rising = close[-1] > close[-30] if len(close) >= 30 else True
+                obv_falling = obv.iloc[-1] < obv_ma.iloc[-1]
+                
+                if price_rising and obv_falling:
+                    reasons.append(f"OBV: цена растёт, но объём не подтверждает (OBV ниже MA)")
+                    logger.warning(f"  ⚠️ OBV не подтверждает рост цены")
+                    
+            except Exception as e:
+                logger.debug(f"Ошибка при расчёте OBV: {e}")
+            
+            # ════════════════════════════════════════════════════════════
+            # 4️⃣ RSI - Перекупленность + отсутствие долгосроч тренда
+            # ════════════════════════════════════════════════════════════
+            try:
+                rsi = ta.momentum.rsi(pd.Series(close), window=14)
+                rsi_val = float(rsi.iloc[-1])
+                
+                # RSI > 80 = очень перекуплено, обычно идёт откат
+                # Особенно опасно если нет долгосроч тренда
+                try:
+                    adx_50_val = float(adx_50.iloc[-1]) if not pd.isna(adx_50.iloc[-1]) else 0
+                except:
+                    adx_50_val = 0
+                
+                if rsi_val > 80 and adx_50_val < 20:
+                    reasons.append(f"RSI перекупленность (RSI={rsi_val:.0f}) без долгосроч тренда (ADX-50={adx_50_val:.1f})")
+                    logger.warning(f"  ⚠️ RSI высокий ({rsi_val:.0f}) - риск отката")
+                    
+            except Exception as e:
+                logger.debug(f"Ошибка при расчёте RSI: {e}")
+            
+            # ════════════════════════════════════════════════════════════
+            # 5️⃣ Bollinger Bands - Цена на экстремуме
+            # ════════════════════════════════════════════════════════════
+            try:
+                bb_high = ta.volatility.bollinger_hband(pd.Series(close), window=20, window_dev=2)
+                bb_low = ta.volatility.bollinger_lband(pd.Series(close), window=20, window_dev=2)
+                
+                # Считаем позицию цены относительно лент (0-1)
+                current_price = close[-1]
+                upper = bb_high.iloc[-1]
+                lower = bb_low.iloc[-1]
+                
+                if upper > lower:
+                    price_position = (current_price - lower) / (upper - lower)
+                else:
+                    price_position = 0.5
+                
+                # Если цена на ВЕРХНЕЙ ленте (> 0.8) после падения - отскок!
+                try:
+                    adx_50_val = float(adx_50.iloc[-1]) if not pd.isna(adx_50.iloc[-1]) else 0
+                except:
+                    adx_50_val = 0
+                
+                if price_position > 0.8 and adx_50_val < 20:
+                    reasons.append(f"Bollinger Bands: цена на верхней ленте ({price_position:.2%}) без тренда")
+                    logger.warning(f"  ⚠️ Цена на верхней ленте Bollinger - локальный максимум")
+                    
+            except Exception as e:
+                logger.debug(f"Ошибка при расчёте Bollinger Bands: {e}")
+            
+            # ════════════════════════════════════════════════════════════
+            # ФИНАЛЬНЫЙ ВЫВОД
+            # ════════════════════════════════════════════════════════════
+            is_false = len(reasons) >= 2  # Нужно минимум 2 причины для исключения
+            
+            if is_false:
+                logger.warning(f"🚨 ЛОЖНЫЙ ОТСКОК ОБНАРУЖЕН! Причины ({len(reasons)}):")
+                for i, reason in enumerate(reasons, 1):
+                    logger.warning(f"   {i}. {reason}")
+            
+            return is_false, reasons
+            
         except Exception as e:
-            logger.error(f"Ошибка при расчете RSI: {e}")
+            logger.error(f"Ошибка в is_false_recovery: {e}")
+            return False, []
 
-        return df
 
     @staticmethod
     def find_support_resistance(
@@ -195,7 +271,7 @@ class TechnicalAnalyzer:
     @staticmethod
     def detect_trend(df: pd.DataFrame) -> Dict[str, any]:
         """
-        Определяет текущий тренд (up/down/sideways).
+        Определяет текущий тренд (up/down/sideways) используя ADX и МА.
 
         Args:
             df: DataFrame с колонками CLOSE, HIGH, LOW
@@ -209,35 +285,61 @@ class TechnicalAnalyzer:
 
         try:
             close = df['CLOSE']
+            high = df.get('HIGH', df['CLOSE'])
+            low = df.get('LOW', df['CLOSE'])
 
-            # Считаем средние цены
+            # Нужно минимум 50 свечей для корректного расчёта
+            if len(df) < 50:
+                logger.warning(f"Недостаточно данных для анализа тренда: {len(df)} < 50")
+                return {'trend': 'sideways', 'strength': 'weak', 'adx': 0}
+
+            # 1️⃣ Расчитываем ADX (профессиональный индикатор тренда)
+            # ADX > 25 = сильный тренд, ADX < 20 = нет тренда
+            try:
+                adx = ta.trend.adx(high, low, close, window=14)
+                adx_value = float(adx.iloc[-1]) if not pd.isna(adx.iloc[-1]) else 0
+            except Exception as e:
+                logger.error(f"Ошибка при расчёте ADX: {e}")
+                raise  # Если ta не работает, это критическая ошибка
+
+            # 2️⃣ Скользящие средние (долгосрочный тренд)
             ma_20 = close.rolling(window=20).mean()
             ma_50 = close.rolling(window=50).mean()
+            ma_200 = close.rolling(window=200).mean()
 
             # Последние значения
             last_close = close.iloc[-1]
             last_ma20 = ma_20.iloc[-1]
             last_ma50 = ma_50.iloc[-1]
+            last_ma200 = ma_200.iloc[-1]
 
-            # Определяем тренд
-            if last_close > last_ma20 > last_ma50:
-                trend = 'up'
-                strength = 'strong'
-            elif last_close > last_ma20 and last_close > last_ma50:
-                trend = 'up'
-                strength = 'moderate'
-            elif last_close < last_ma20 < last_ma50:
-                trend = 'down'
-                strength = 'strong'
-            elif last_close < last_ma20 and last_close < last_ma50:
-                trend = 'down'
-                strength = 'moderate'
+            # 3️⃣ Определяем тренд (используем ADX как приоритет)
+            if adx_value > 25:
+                # Сильный тренд - определяем направление по МА и CLOSE
+                if last_close > last_ma50:
+                    trend = 'up'
+                    strength = 'strong'
+                else:
+                    trend = 'down'
+                    strength = 'strong'
+            elif adx_value > 20:
+                # Умеренный тренд
+                if last_close > last_ma50:
+                    trend = 'up'
+                    strength = 'moderate'
+                else:
+                    trend = 'down'
+                    strength = 'moderate'
             else:
+                # Слабый тренд / боковик
                 trend = 'sideways'
                 strength = 'weak'
 
-            # Считаем угол наклона
-            recent_closes = close.tail(10).values
+            # 4️⃣ Общее изменение цены за весь период
+            price_change_pct = ((last_close - close.iloc[0]) / close.iloc[0]) * 100 if len(close) > 0 else 0
+            
+            # 5️⃣ Угол наклона за последние 30 дней (для подтверждения)
+            recent_closes = close.tail(30).values
             if len(recent_closes) > 1:
                 angle = np.polyfit(range(len(recent_closes)), recent_closes, 1)[0]
             else:
@@ -249,9 +351,12 @@ class TechnicalAnalyzer:
                 'current_price': float(last_close),
                 'ma_20': float(last_ma20),
                 'ma_50': float(last_ma50),
+                'ma_200': float(last_ma200) if not pd.isna(last_ma200) else None,
+                'adx': float(adx_value),  # ← НОВОЕ: ADX индикатор
                 'angle': float(angle),
                 'above_ma20': last_close > last_ma20,
-                'above_ma50': last_close > last_ma50
+                'above_ma50': last_close > last_ma50,
+                'price_change_overall': float(price_change_pct)  # ← НОВОЕ: общее изменение
             }
 
             logger.info(f"Тренд определен: {trend} ({strength})")
@@ -348,11 +453,21 @@ class TechnicalAnalyzer:
             # Выполняем анализ
             analyzer = TechnicalAnalyzer()
 
-            # 1. EMA
-            df = analyzer.calculate_ema(df, periods=[20, 50, 200])
+            # 1. EMA (используем та напрямую)
+            try:
+                df['EMA_20'] = ta.trend.ema_indicator(df['CLOSE'], window=20, fillna=True)
+                df['EMA_50'] = ta.trend.ema_indicator(df['CLOSE'], window=50, fillna=True)
+                df['EMA_200'] = ta.trend.ema_indicator(df['CLOSE'], window=200, fillna=True)
+                logger.info("EMA индикаторы (20, 50, 200) рассчитаны")
+            except Exception as e:
+                logger.error(f"Ошибка при расчете EMA: {e}")
 
-            # 2. RSI
-            df = analyzer.calculate_rsi(df, period=14)
+            # 2. RSI (используем та напрямую)
+            try:
+                df['RSI'] = ta.momentum.rsi(df['CLOSE'], window=14, fillna=True)
+                logger.info("RSI индикатор рассчитан")
+            except Exception as e:
+                logger.error(f"Ошибка при расчете RSI: {e}")
 
             # 3. Поддержка/сопротивление
             # ВАРИАНТ 1: Приоритет конфигу

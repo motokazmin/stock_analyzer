@@ -1,0 +1,361 @@
+# Stock Analyzer - Project Rules for Cursor AI
+
+## 📋 Project Overview
+Stock Analyzer - система анализа акций Московской биржи (Moex) с техническим анализом, автоматическим рейтингом и торговыми рекомендациями.
+
+## 🎯 Core Principles
+- **Accuracy**: Все расчёты должны быть математически корректны
+- **Reliability**: Обработка ошибок и логирование на всех уровнях
+- **Automation**: Минимум ручного вмешательства, максимум автоматизации
+- **Clarity**: Понятные логи, ясная структура данных
+
+## 🐍 Python Code Style
+- **Version**: Python 3.8+
+- **Style Guide**: PEP 8
+- **Line Length**: 120 characters max
+- **Type Hints**: Обязательны для всех функций
+- **Docstrings**: На русском языке, формат:
+  ```python
+  def function_name(param: type) -> type:
+      """
+      Краткое описание.
+      
+      Args:
+          param: Описание параметра
+          
+      Returns:
+          Описание возвращаемого значения
+      """
+  ```
+
+## 📁 Project Structure
+```
+stock_analyzer/
+├── stock_data/                 # CSV файлы с историческими данными
+│   └── TICKER_full.csv        # Формат: DATE,OPEN,HIGH,LOW,CLOSE,VOLUME
+├── reports/                    # Markdown отчёты (auto-generated)
+│   └── report_YYYYMMDD_HHMMSS.md
+├── recommendations/            # HTML рекомендации (AI-generated)
+│   └── RECOMMENDATIONS_YYYYMMDD.html
+├── analysis_history/           # HTML аудит отчёты (auto-generated)
+│   └── AUDIT_REPORT_YYYYMMDD_HHMMSS.html
+├── docs/                       # 📝 ВСЯ ДОКУМЕНТАЦИЯ
+│   ├── README.md              # Главная документация
+│   ├── ARCHITECTURE.md        # Архитектура проекта
+│   ├── GUIDE_*.md             # Руководства (guide_cli, guide_analysis, etc)
+│   ├── TECHNICAL_*.md         # Технические документы
+│   ├── TUTORIAL_*.md          # Туториалы
+│   └── *.md                   # Все остальные документы
+├── stock_data_manager.py       # Загрузка данных с Moex ISS API
+├── technical_analysis.py       # Технический анализ (ta-library)
+├── report_generator.py         # Генерация Markdown отчётов
+├── audit_manager.py            # Управление рекомендациями
+├── audit_report_generator.py   # Генерация HTML аудит отчётов
+├── main.py                     # CLI интерфейс
+├── config.json                 # Конфигурация (вотчлист, папки)
+├── config_manager.py           # Управление config.json
+├── promt.txt                   # Промт для AI (генерация рекомендаций)
+├── requirements.txt            # Зависимости
+├── .cursorules                 # Правила для Cursor AI
+├── .cursor/config.json         # Конфиг Cursor
+└── .gitignore                  # Git правила
+```
+
+## 🔧 Key Technologies
+- **API**: Moex ISS (https://iss.moex.com)
+- **Data**: pandas, numpy
+- **Technical Analysis**: ta-library (ta==0.11.0)
+- **HTTP**: requests
+- **Logging**: Python logging module
+
+## 📊 Data Format
+### CSV Format (stock_data/*.csv)
+```
+DATE,OPEN,HIGH,LOW,CLOSE,VOLUME
+2024-11-13,218.6,218.75,212.8,213.9,111806
+2024-11-14,213.5,213.5,205.1,205.55,116583
+```
+
+### JSON Format (config.json)
+```json
+{
+  "watchlist": ["SBER", "GAZP", "LKOH"],
+  "data_folder": "stock_data",
+  "reports_folder": "reports",
+  "analysis_period_months": 6,
+  "key_levels": {
+    "SBER": {"support": [280, 290], "resistance": [310, 320]}
+  }
+}
+```
+
+## 🤖 Technical Analysis Rules
+1. **Always use ta-library** for indicators (ADX, RSI, EMA, MACD, BBANDS, OBV)
+2. **False Recovery Detection**: Используй `is_false_recovery()` для фильтрации ложных отскоков
+3. **Trend Analysis**: Приоритет ADX > MA200 > MA50 > MA20
+4. **Entry Points**: Консервативный (текущая цена) + Агрессивный (откат)
+5. **Risk Management**: Target 1:2 минимум, стоп-лосс всегда установлен
+
+## 📝 Naming Conventions
+### Python
+- **Classes**: `PascalCase` (e.g., `StockDataManager`, `TechnicalAnalyzer`)
+- **Functions**: `snake_case` (e.g., `download_stock_data`, `is_false_recovery`)
+- **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_LINE_LENGTH = 120`)
+- **Private methods**: `_leading_underscore` (e.g., `_clean_data`)
+
+### Files
+- **Data**: `TICKER_full.csv` (e.g., `SBER_full.csv`) → saved in `stock_data/`
+- **Reports (auto)**: `report_YYYYMMDD_HHMMSS.md` → saved in `reports/`
+- **Recommendations (HTML)**: `RECOMMENDATIONS_YYYYMMDD.html` → saved in `recommendations/`
+- **Audit (HTML)**: `AUDIT_REPORT_YYYYMMDD_HHMMSS.html` → saved in `analysis_history/`
+- **Documentation (Markdown)**: `*.md` → **SAVED IN `docs/` FOLDER**
+  - Pattern: `docs/GUIDE_*.md`, `docs/TUTORIAL_*.md`, `docs/TECHNICAL_*.md`, etc.
+  - Examples: `docs/GUIDE_CLI.md`, `docs/TUTORIAL_UPDATE_DATA.md`, `docs/TECHNICAL_INDICATORS.md`
+
+## 🎨 HTML Recommendations Template
+
+All recommendation HTML files MUST follow this template structure:
+
+### HTML Structure
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Meta tags, title, styles -->
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- Title, date, subtitle -->
+        </header>
+        
+        <nav class="sticky">
+            <!-- Navigation: Рейтинг, ТОП-5, Наблюдение, Избегать, Итоги -->
+        </nav>
+        
+        <!-- SECTION 1: Рейтинг -->
+        <section id="rating" class="rating-section">
+            <h2>🏆 Рейтинг BUY Сигналов</h2>
+            <!-- Stock cards with: Ticker, Price, Signal, Indicators, Levels, Analysis, Entry/Exit Table, Verdict -->
+        </section>
+        
+        <!-- SECTION 2: ТОП-5 -->
+        <section id="top5" class="top5-section">
+            <h2>🎯 ТОП-5 Возможностей на Неделю</h2>
+            <!-- Numbered list with investment thesis -->
+        </section>
+        
+        <!-- SECTION 3: Наблюдение -->
+        <section id="watch" class="watch-section">
+            <h2>👁️ Акции для Наблюдения</h2>
+            <!-- HOLD stocks with conditions for entry -->
+        </section>
+        
+        <!-- SECTION 4: Избегать -->
+        <section id="avoid" class="avoid-section">
+            <h2>🚫 Акции для Избегания</h2>
+            <!-- Downtrend stocks to avoid -->
+        </section>
+        
+        <!-- SECTION 5: Итоги -->
+        <section id="summary" class="summary-section">
+            <h2>📋 Итоговая Аналитика</h2>
+            <!-- Market situation, strategy, risks, advice, final verdict -->
+        </section>
+        
+        <footer>
+            <!-- Date, disclaimer -->
+        </footer>
+    </div>
+</body>
+</html>
+```
+
+### Stock Card Structure (for each BUY recommendation)
+```html
+<div class="stock-card buy">
+    <div class="stock-header">
+        <div>
+            <span class="ticker">TICKER_NAME</span>
+            <p class="sector">Sector Description</p>
+        </div>
+        <div class="price-info">
+            <span class="price">XXX.XX ₽</span>
+            <span class="change positive/negative">±X.X%</span>
+            <span class="signal buy">🟢 BUY</span>
+        </div>
+    </div>
+    
+    <div class="indicators">
+        <div class="indicator">
+            <div class="indicator-label">Скор</div>
+            <div class="indicator-value">XX/100</div>
+        </div>
+        <!-- More indicators: Тренд, RSI, Сигнал -->
+    </div>
+    
+    <div class="analysis-grid">
+        <div class="analysis-box">
+            <h4>💡 Основание</h4>
+            <p><!-- Analysis justification --></p>
+        </div>
+        <div class="analysis-box">
+            <h4>📈 Уровни</h4>
+            <p>Поддержка: X ₽<br>Сопротивление: Y ₽</p>
+        </div>
+        <div class="analysis-box">
+            <h4>⚠️ Риски</h4>
+            <p><!-- Risk description --></p>
+        </div>
+    </div>
+    
+    <table>
+        <tr>
+            <th>Параметр</th>
+            <th>Консервативный</th>
+            <th>Агрессивный</th>
+        </tr>
+        <tr>
+            <td><strong>Вход</strong></td>
+            <td>XXX.XX (текущая)</td>
+            <td>XXX.XX (откат)</td>
+        </tr>
+        <tr>
+            <td><strong>Цель 1</strong></td>
+            <td>XXX.XX (+X%)</td>
+            <td>XXX.XX (+X%)</td>
+        </tr>
+        <tr>
+            <td><strong>Цель 2</strong></td>
+            <td>XXX.XX (+X%)</td>
+            <td>XXX.XX (+X%)</td>
+        </tr>
+        <tr>
+            <td><strong>Стоп-лосс</strong></td>
+            <td>XXX.XX (-X%)</td>
+            <td>XXX.XX (-X%)</td>
+        </tr>
+    </table>
+    
+    <div class="verdict positive/neutral/negative">
+        <!-- Final recommendation with emoji -->
+    </div>
+</div>
+```
+
+### CSS Guidelines
+- **Colors**: Gradient backgrounds for sections
+  - Rating: `#667eea` to `#764ba2` (purple)
+  - Top5: `#f093fb` to `#f5576c` (pink)
+  - Watch: `#4facfe` to `#00f2fe` (cyan)
+  - Avoid: `#fa709a` to `#fee140` (orange)
+  - Summary: `#30cfd0` to `#330867` (teal)
+- **Cards**: White background with left border (4px) color-coded by signal
+- **Typography**: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+- **Responsive**: Grid layout with `auto-fit, minmax(250px, 1fr)`
+- **Navigation**: Sticky top bar with smooth scroll
+
+### JavaScript
+- Smooth scroll to sections on nav click
+- Must be functional without requiring external libraries
+
+## 📋 Workflow
+
+### 1. Update Data
+```bash
+python main.py update
+```
+- Downloads new data from Moex ISS API
+- Cleans duplicates and zero-volume entries
+- Saves to `stock_data/*.csv`
+
+### 2. Analyze
+```bash
+python main.py analyze
+```
+- Reads CSV files
+- Calculates technical indicators (ta-library)
+- Filters false recoveries
+- Generates `reports/report_*.md`
+- Saves BUY recommendations to `recommendations_archive.json`
+
+### 3. Generate Recommendations (AI)
+- Read latest `reports/report_*.md` and `stock_data/*.csv`
+- Follow `.cursorules` HTML template
+- Generate `recommendations/RECOMMENDATIONS_YYYYMMDD.html`
+
+### 4. Audit
+```bash
+python main.py audit
+```
+- Checks past recommendations against new data
+- Generates `analysis_history/AUDIT_REPORT_*.html`
+
+## 🚨 False Recovery Detection
+Must use `is_false_recovery()` function with 5 independent checks:
+1. **ADX Double**: ADX-50 < 15 AND ADX-14 > 25 → false recovery
+2. **MACD Divergence**: Price ↑ BUT MACD ↓ → false signal
+3. **OBV**: Price ↑ BUT OBV ↓ → volume not confirmed
+4. **RSI Overbought**: RSI > 80 AND ADX-50 < 20 → dangerous reversal
+5. **Bollinger Bands**: Price at upper band AND no trend → local max
+
+Exclude stock if >= 2 conditions met.
+
+## 🔍 Code Review Checklist
+- [ ] Type hints on all functions
+- [ ] Docstrings on all functions (Russian)
+- [ ] Error handling with try-except
+- [ ] Logging at appropriate levels (info, warning, error)
+- [ ] CSV files properly formatted
+- [ ] JSON valid and properly indented
+- [ ] HTML valid and responsive
+- [ ] No hardcoded paths (use config)
+- [ ] All recommendations have BUY signal (score >= 60)
+- [ ] No false recovery stocks in recommendations
+
+## 📝 Important Notes
+- **Always log**: Use logger.info(), logger.warning(), logger.error()
+- **No hardcoding**: Use config.json for all settings
+- **Error handling**: Never let exceptions propagate uncaught
+- **Data validation**: Always validate CSV format before processing
+- **API limits**: Moex ISS API has rate limits, use appropriate delays
+- **Timezone**: Use datetime.now() without timezone assumptions
+- **Recommendations**: Only BUY signals (score >= 60) go to archive
+- **Exclusions**: False recovery stocks are excluded from recommendations
+
+## 🎓 Learning Resources
+- Moex ISS API: https://iss.moex.com
+- ta-library docs: https://github.com/bukosabino/ta
+- PEP 8: https://www.python.org/dev/peps/pep-0008/
+- Technical Analysis: RSI, EMA, ADX concepts
+
+## 📞 Support
+For questions about the project structure or coding standards, refer to:
+- `docs/ARCHITECTURE.md` - Project architecture
+- `docs/README.md` - Main documentation (in docs/ folder!)
+- `promt.txt` - AI instructions for recommendations
+
+---
+
+## 🎯 CRITICAL RULE FOR AI ASSISTANT
+
+### 📝 All Documentation MUST be saved in `docs/` folder
+
+When generating any Markdown documentation (guides, tutorials, explanations, etc.):
+1. **ALWAYS** save to `docs/` subfolder
+2. **Format**: `docs/GUIDE_*.md`, `docs/TUTORIAL_*.md`, `docs/TECHNICAL_*.md`
+3. **Never** create MD files in the root directory
+4. **Examples of correct paths**:
+   - ✅ `docs/GUIDE_CLI.md`
+   - ✅ `docs/TUTORIAL_ANALYSIS.md`
+   - ✅ `docs/TECHNICAL_INDICATORS.md`
+   - ❌ `GUIDE_CLI.md` (wrong - in root!)
+   - ❌ `README.md` (wrong - use `docs/README.md`)
+
+### 📋 File Organization Summary
+- **CSV data** → `stock_data/`
+- **Auto reports** → `reports/`
+- **HTML recommendations** → `recommendations/`
+- **HTML audit** → `analysis_history/`
+- **ALL Markdown docs** → `docs/` ← **KEY RULE**
+

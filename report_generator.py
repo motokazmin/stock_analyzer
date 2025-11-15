@@ -12,6 +12,7 @@ from typing import Dict, List, Tuple, Optional
 import logging
 
 from technical_analysis import TechnicalAnalyzer
+from audit_manager import AuditManager
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +32,7 @@ class ReportGenerator:
         self.reports_dir = Path(reports_dir)
         self.reports_dir.mkdir(exist_ok=True)
         self.analyzer = TechnicalAnalyzer()
+        self.audit = AuditManager()  # ← добавляем аудит менеджер
         logger.info(f"Директория отчётов: {self.reports_dir}")
 
     @staticmethod
@@ -160,7 +162,9 @@ class ReportGenerator:
                 'rsi': rsi,
                 'trend': trend.get('trend'),
                 'factors': factors,
-                'full_result': result
+                'full_result': result,
+                'is_excluded': result.get('is_excluded', False),  # ← ДОБАВЛЯЕМ!
+                'excluded_reason': result.get('excluded_reason', None)  # ← ДОБАВЛЯЕМ!
             })
 
         # Сортируем по скору (по убыванию)
@@ -347,8 +351,40 @@ class ReportGenerator:
             logger.error("Не удалось проанализировать акции")
             return ""
 
+        # 🚨 ФИЛЬТРУЕМ ложные восстановления (отскоки от дна)
+        # Используем профессиональный анализ с ta-library (ADX, MACD, OBV, RSI, BBANDS)
+        filtered_results = []
+        for item in analysis_results:
+            ticker = item.get('ticker', 'N/A')
+            item['is_excluded'] = False
+            item['excluded_reason'] = None
+            
+            # Загружаем данные для проверки на ложный отскок
+            try:
+                from pathlib import Path
+                data_file = Path("stock_data") / f"{ticker}_full.csv"
+                
+                if data_file.exists():
+                    df = pd.read_csv(data_file)
+                    df['DATE'] = pd.to_datetime(df['DATE'])
+                    
+                    if df is not None and len(df) > 0:
+                        # Проверяем на ложный отскок
+                        is_false, reasons = self.analyzer.is_false_recovery(df)
+                        
+                        if is_false:
+                            logger.warning(f"⚠️  {ticker}: исключена из BUY - ложный отскок")
+                            item['is_excluded'] = True
+                            item['excluded_reason'] = "; ".join(reasons)
+                            logger.info(f"    Причины: {item['excluded_reason']}")
+                    
+            except Exception as e:
+                logger.debug(f"Не удалось проверить {ticker} на ложный отскок: {e}")
+            
+            filtered_results.append(item)
+
         # Ранжируем акции
-        ranked = self.rank_stocks(analysis_results)
+        ranked = self.rank_stocks(filtered_results)
 
         # Начинаем отчёт
         now = datetime.now()
@@ -367,6 +403,10 @@ class ReportGenerator:
         report += "|---|-------|------|------|-----|-------|--------|------|-------------|\n"
 
         for item in ranked:
+            # 🚨 ПРОПУСКАЕМ исключённые акции
+            if item.get('is_excluded', False):
+                continue
+            
             rank = item['rank']
             ticker = item['ticker']
             price = f"{item['price']:.2f}"
@@ -399,8 +439,49 @@ class ReportGenerator:
 
         if buy_signals:
             report += "### 🟢 Сигналы на ПОКУПКУ\n"
-            for item in buy_signals[:3]:
+            for item in buy_signals:  # ← ВСЕ BUY сигналы, не только топ-3!
+                # 🚨 Проверяем не исключена ли акция
+                if item.get('is_excluded', False):
+                    reason = item.get('excluded_reason', 'неизвестно')
+                    report += f"- **{item['ticker']}** (⚠️ исключена: {reason})\n"
+                    continue
+                
                 report += f"- **{item['ticker']}** (скор: {item['score']}) - {item['factors'][0]}\n"
+                
+                # 🔥 ДОБАВЛЯЕМ В АРХИВ РЕКОМЕНДАЦИЙ
+                try:
+                    full_result = item['full_result']
+                    ticker = item['ticker']
+                    entry_price = full_result.get('current_price', 0)
+                    
+                    # Используем уровни поддержки/сопротивления как цели
+                    support = full_result.get('support_resistance', {}).get('support', entry_price * 0.98)
+                    resistance = full_result.get('support_resistance', {}).get('resistance', entry_price * 1.05)
+                    
+                    # Рассчитываем цели на основе ATR или уровней
+                    range_size = resistance - support
+                    target1 = entry_price + (range_size * 0.5)
+                    target2 = entry_price + (range_size * 1.0)
+                    stop_loss = support * 0.98  # Чуть ниже поддержки
+                    
+                    rsi = full_result.get('technical_indicators', {}).get('rsi', 50)
+                    trend = full_result.get('trend', {}).get('trend', 'sideways').upper()
+                    
+                    self.audit.add_recommendation(
+                        ticker=ticker,
+                        signal="BUY",
+                        entry_price=entry_price,
+                        target1=target1,
+                        target2=target2,
+                        stop_loss=stop_loss,
+                        rsi=rsi,
+                        trend=trend,
+                        comment=f"{item['factors'][0]}"
+                    )
+                    logger.info(f"✅ Добавлена рекомендация BUY для {ticker}")
+                except Exception as e:
+                    logger.error(f"❌ Ошибка при добавлении рекомендации {item['ticker']}: {e}")
+            
             report += "\n"
 
         if sell_signals:

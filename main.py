@@ -23,6 +23,8 @@ from typing import List, Dict
 from stock_data_manager import StockDataManager
 from technical_analysis import TechnicalAnalyzer
 from report_generator import ReportGenerator
+from audit_manager import AuditManager
+from audit_report_generator import AuditReportGenerator
 
 # Настройка логирования
 logging.basicConfig(
@@ -134,6 +136,7 @@ class StockAnalyzerCLI:
         self.manager = StockDataManager()
         self.analyzer = TechnicalAnalyzer()
         self.reporter = ReportGenerator()
+        self.audit = AuditManager()
 
     def update_data(self, args) -> int:
         """Команда: обновить данные."""
@@ -364,6 +367,56 @@ class StockAnalyzerCLI:
         print()
         return 0
 
+    def audit_recommendations(self, args) -> int:
+        """Команда: аудит рекомендаций."""
+        print("\n" + "="*60)
+        print("📊 АУДИТ ТОРГОВЫХ РЕКОМЕНДАЦИЙ")
+        print("="*60 + "\n")
+
+        print("🔍 Проверяем все активные рекомендации...\n")
+
+        try:
+            # Проверяем рекомендации
+            results = self.audit.audit_all()
+
+            if not results:
+                print("⚠️ Нет рекомендаций для проверки")
+                return 0
+
+            # Выводим результаты
+            print(f"✅ Проверено рекомендаций: {len(results)}\n")
+
+            for result in results:
+                ticker = result.get('ticker', 'N/A')
+                status = result.get('status', 'N/A')
+                result_pct = result.get('result_pct', 0)
+                
+                emoji = "✅" if result_pct > 0 else "❌" if result_pct < 0 else "⏳"
+                print(f"{emoji} {ticker}: {status} ({result_pct:+.2f}%)")
+
+            # Получаем статистику
+            stats = self.audit.get_statistics()
+            print(f"\n📈 Статистика:")
+            print(f"  Всего: {stats['total_recommendations']}")
+            print(f"  Выполнено: {stats['completed']}")
+            print(f"  Провалено: {stats['failed']}")
+            print(f"  Активно: {stats['active']}")
+            print(f"  Успешность: {stats['success_rate']}%")
+            print(f"  Средний результат: {stats['avg_profit']:+.2f}%")
+
+            # Генерируем HTML отчёт
+            print(f"\n📄 Создаём HTML отчёт...")
+            generator = AuditReportGenerator()
+            report_path = generator.save_report()
+            print(f"✅ Отчёт сохранён: {report_path}")
+
+            print()
+            return 0
+
+        except Exception as e:
+            print(f"❌ Ошибка при аудите: {e}")
+            return 1
+
 
 def main():
     """Основная функция CLI."""
@@ -441,6 +494,12 @@ def main():
         help='Показать статус приложения'
     )
 
+    # Команда: audit
+    subparsers.add_parser(
+        'audit',
+        help='Аудит торговых рекомендаций и создание отчёта'
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -466,6 +525,8 @@ def main():
             return cli.get_ticker_info(args)
         elif args.command == 'status':
             return cli.show_status(args)
+        elif args.command == 'audit':
+            return cli.audit_recommendations(args)
         else:
             parser.print_help()
             return 1
