@@ -29,8 +29,18 @@ class TechnicalAnalyzer:
     """Класс для технического анализа акций."""
 
     def __init__(self):
-        """Инициализация анализатора."""
-        pass
+        """Инициализация анализатора.
+        
+        Устанавливает стандартные параметры для технического анализа:
+        - MA периоды: 20, 50, 200
+        - RSI период: 14
+        - ADX пороги для определения тренда
+        """
+        self.ma_periods = [20, 50, 200]
+        self.rsi_period = 14
+        self.adx_strong_threshold = 25  # ADX > 25 = сильный тренд
+        self.adx_weak_threshold = 15    # ADX < 15 = нет тренда
+        logger.debug("TechnicalAnalyzer инициализирован с стандартными параметрами")
 
     @staticmethod
     def is_false_recovery(df: pd.DataFrame) -> Tuple[bool, List[str]]:

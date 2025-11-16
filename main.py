@@ -25,6 +25,7 @@ from technical_analysis import TechnicalAnalyzer
 from report_generator import ReportGenerator
 from audit_manager import AuditManager
 from audit_report_generator import AuditReportGenerator
+from news_integration import NewsIntegration
 
 # Настройка логирования
 logging.basicConfig(
@@ -190,7 +191,43 @@ class StockAnalyzerCLI:
             print(f"\n✅ Отчёт создан: {filepath}")
             ConfigManager.update_timestamp('last_report')
 
-            # Выводим первую часть
+            # 📰 Попытка загрузить новости (используется Mock провайдер)
+            print("\n📰 Инициализирую систему новостей...")
+            try:
+                news_integration = NewsIntegration()
+                print(f"   {news_integration.get_provider_info()}")
+                
+                # Парсим отчёт чтобы найти BUY сигналы
+                buy_signals = self._extract_buy_signals(filepath)
+                
+                if buy_signals:
+                    print(f"   Найдено {len(buy_signals)} BUY сигналов: {', '.join(buy_signals)}")
+                    news_results = news_integration.get_news_for_analysis(buy_signals)
+                    
+                    if news_results:
+                        # Сохраняем новости в JSON
+                        news_file = Path("stock_news.json")
+                        with open(news_file, 'w', encoding='utf-8') as f:
+                            json.dump(news_results, f, ensure_ascii=False, indent=2)
+                        
+                        print(f"✅ Новости сохранены: {news_file}")
+                        
+                        # Выводим статистику
+                        total_articles = sum(len(v) for v in news_results.values())
+                        print(f"   📊 Всего статей найдено: {total_articles}")
+                        for ticker, articles in news_results.items():
+                            sentiments = [a.get('sentiment') for a in articles]
+                            print(f"   - {ticker}: {len(articles)} статей ({', '.join(set(sentiments))})")
+                    else:
+                        print("   ℹ️ Новостей не получено (используется Mock провайдер)")
+                        print("   ⚠️ Когда появится MOEX API - новости будут автоматически добавлены")
+                else:
+                    print("   ℹ️ BUY сигналов не найдено")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Ошибка при работе с новостями: {e}")
+
+            # Выводим первую часть отчёта
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
                 lines = content.split('\n')
@@ -204,6 +241,46 @@ class StockAnalyzerCLI:
         else:
             print("\n❌ Ошибка при создании отчёта")
             return 1
+
+    @staticmethod
+    def _extract_buy_signals(filepath: Path) -> List[str]:
+        """Извлекает BUY сигналы из markdown отчёта.
+        
+        Args:
+            filepath: Путь к markdown отчёту
+            
+        Returns:
+            Список тикеров с BUY сигналами
+        """
+        buy_tickers = []
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # Ищем строки с BUY сигналами в таблице
+            import re
+            # Паттерн: | # | **TICKER** | ... | 🟢 BUY |
+            matches = re.findall(r'\*\*([A-Z0-9\-]+)\*\*.*?🟢 BUY', content)
+            buy_tickers.extend(matches)
+            
+            # Ищем в списке "Сигналы на ПОКУПКУ"
+            # Паттерн: - **TICKER** (...)
+            if '### 🟢 Сигналы на ПОКУПКУ' in content:
+                signals_section = content.split('### 🟢 Сигналы на ПОКУПКУ')[1]
+                if '### 🟡 HOLD' in signals_section:
+                    signals_section = signals_section.split('### 🟡 HOLD')[0]
+                
+                matches = re.findall(r'- \*\*([A-Z0-9\-]+)\*\*', signals_section)
+                buy_tickers.extend(matches)
+            
+            # Убираем дубликаты и исключённые (с ⚠️)
+            buy_tickers = list(set(buy_tickers))
+            
+            return buy_tickers
+            
+        except Exception as e:
+            logger.warning(f"Ошибка при парсинге отчёта: {e}")
+            return []
 
     def add_ticker(self, args) -> int:
         """Команда: добавить акцию."""
