@@ -54,6 +54,9 @@ class AuditManager:
         """
         Добавляет новую рекомендацию в архив.
         
+        Проверяет, что рекомендация для этого ticker еще не была добавлена сегодня,
+        чтобы избежать дублей.
+        
         Args:
             ticker: тикер акции
             signal: BUY/HOLD/SELL
@@ -65,6 +68,14 @@ class AuditManager:
             trend: тренд (UP/DOWN/SIDEWAYS)
             comment: комментарий
         """
+        # Проверяем, нет ли уже рекомендации для этого тикера сегодня
+        today = datetime.now().date()
+        for rec in self.archive["recommendations"]:
+            rec_date = pd.to_datetime(rec["date"]).date()
+            if rec["ticker"] == ticker and rec_date == today and rec["signal"] == signal:
+                logger.info(f"⚠️  Рекомендация {ticker} {signal} уже добавлена сегодня")
+                return
+        
         rec = {
             "date": datetime.now().isoformat(),
             "ticker": ticker,
@@ -85,7 +96,13 @@ class AuditManager:
     
     def audit_recommendation(self, ticker: str, rec_date: str) -> Dict:
         """
-        Проверяет рекомендацию.
+        Проверяет рекомендацию, сравнивая цену в день рекомендации с текущей ценой.
+        
+        Логика:
+        1. Берет цену на дату рекомендации (entry_price)
+        2. Берет последнюю доступную цену (текущая)
+        3. Проверяет: была ли достигнута цель? сработал ли стоп?
+        4. Считает результат в %
         
         Args:
             ticker: тикер акции
@@ -113,78 +130,96 @@ class AuditManager:
             return {"status": "ERROR", "message": f"Рекомендация не найдена"}
         
         # Парсим дату рекомендации
-        rec_datetime = pd.to_datetime(rec["date"]).date()
+        rec_date_obj = pd.to_datetime(rec["date"]).date()
         
-        # Берём данные после даты рекомендации
-        df_after = df[df['DATE'].dt.date > rec_datetime]
+        # Получаем цену входа (на дату рекомендации или максимально близко к ней)
+        # Фильтруем по году, чтобы не взять старые данные из прошлого года
+        rec_year = rec_date_obj.year
+        df_current_year = df[df['DATE'].dt.year == rec_year]
         
-        if len(df_after) == 0:
-            return {
-                "status": "NO_DATA",
-                "message": "Нет данных после рекомендации",
-                "ticker": ticker
-            }
+        rec_day_data = df_current_year[df_current_year['DATE'].dt.date == rec_date_obj]
+        if len(rec_day_data) == 0:
+            # Если данных в точный день нет, берём самый близкий день после рекомендации
+            rec_day_data = df_current_year[df_current_year['DATE'].dt.date >= rec_date_obj].head(1)
+            if len(rec_day_data) == 0:
+                return {"status": "NO_DATA", "message": f"Нет данных для {ticker} на {rec_date_obj}"}
         
-        entry_price = rec["entry_price"]
-        target1 = rec["target1"]
-        target2 = rec["target2"]
-        stop_loss = rec["stop_loss"]
+        entry_price_actual = rec_day_data.iloc[-1]['CLOSE']
+        rec_day_actual = rec_day_data.iloc[-1]['DATE'].date()
         
-        # Анализируем каждый день
+        entry_price = rec.get("entry_price")
+        target1 = rec.get("target1")
+        target2 = rec.get("target2")
+        stop_loss = rec.get("stop_loss")
+        
+        # Проверяем что все значения заданы
+        if not all([entry_price, target1, target2, stop_loss]):
+            return {"status": "ERROR", "message": f"Неполные данные рекомендации"}
+        
+        # Берём ПОСЛЕДНЮЮ доступную цену (сегодня или последний день торговли)
+        final_price = df_current_year.iloc[-1]['CLOSE']
+        final_date = df_current_year.iloc[-1]['DATE'].date()
+        
+        # Анализируем все данные от даты рекомендации до сегодня (только текущий год)
+        df_period = df_current_year[df_current_year['DATE'].dt.date >= rec_date_obj]
+        
         hit_target1 = False
         hit_target2 = False
         hit_stop_loss = False
-        max_price = 0
-        min_price = float('inf')
-        final_price = df_after.iloc[-1]['CLOSE']
+        max_price = entry_price_actual
+        min_price = entry_price_actual
         
-        for idx, row in df_after.iterrows():
-            close = row['CLOSE']
+        for idx, row in df_period.iterrows():
             high = row['HIGH']
             low = row['LOW']
-            date = row['DATE'].date()
             
             max_price = max(max_price, high)
             min_price = min(min_price, low)
             
-            # Проверяем цели
-            if high >= target1 and not hit_target1:
+            # Проверяем цели (когда цена впервые достигла уровня)
+            if target1 is not None and high >= target1 and not hit_target1:
                 hit_target1 = True
-                target1_date = date
             
-            if high >= target2 and not hit_target2:
+            if target2 is not None and high >= target2 and not hit_target2:
                 hit_target2 = True
-                target2_date = date
             
-            # Проверяем стоп
-            if low <= stop_loss and not hit_stop_loss:
+            # Проверяем стоп (когда цена впервые упала ниже стопа)
+            if stop_loss is not None and low <= stop_loss and not hit_stop_loss:
                 hit_stop_loss = True
-                stop_loss_date = date
         
         # Считаем результат
         if rec["signal"] == "BUY":
             if hit_stop_loss:
+                # Если сработал стоп, результат = убыток до стоп-лосса
                 result_pct = ((stop_loss - entry_price) / entry_price) * 100
                 status = "STOPPED_OUT"
-            elif hit_target1 and hit_target2:
+            elif hit_target2:
+                # Если достигнута вторая цель, результат = до второй цели
                 result_pct = ((target2 - entry_price) / entry_price) * 100
                 status = "TARGET2_HIT"
             elif hit_target1:
+                # Если достигнута первая цель, результат = до первой цели
                 result_pct = ((target1 - entry_price) / entry_price) * 100
                 status = "TARGET1_HIT"
             else:
+                # Иначе результат = текущая цена минус цена входа
                 result_pct = ((final_price - entry_price) / entry_price) * 100
                 status = "IN_PROGRESS"
         else:
             result_pct = 0
             status = "N/A"
         
+        days_passed = (final_date - rec_day_actual).days
+        
         result = {
             "status": status,
             "ticker": ticker,
             "signal": rec["signal"],
-            "entry_price": entry_price,
-            "current_price": final_price,
+            "rec_date": str(rec_day_actual),
+            "entry_price": round(entry_price, 2),
+            "entry_price_actual": round(entry_price_actual, 2),
+            "current_price": round(final_price, 2),
+            "current_date": str(final_date),
             "target1": target1,
             "target2": target2,
             "stop_loss": stop_loss,
@@ -194,7 +229,7 @@ class AuditManager:
             "result_pct": round(result_pct, 2),
             "max_price": round(max_price, 2),
             "min_price": round(min_price, 2),
-            "days_passed": len(df_after)
+            "days_passed": days_passed
         }
         
         return result
@@ -207,10 +242,11 @@ class AuditManager:
         results = []
         for rec in active_recs:
             result = self.audit_recommendation(rec["ticker"], rec["date"])
-            if result.get("status") != "ERROR":
+            # Пропускаем ошибки и NO_DATA - это означает, что данных еще нет
+            if result.get("status") not in ["ERROR", "NO_DATA"]:
                 results.append(result)
                 
-                # Обновляем статус в архиве
+                # Обновляем статус в архиве (только для проверенных рекомендаций)
                 if result["status"] == "TARGET2_HIT":
                     rec["status"] = "COMPLETED"
                     rec["result"] = result["result_pct"]

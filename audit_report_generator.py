@@ -45,8 +45,8 @@ class AuditReportGenerator:
             "active": len(active),
             "success_rate": round((len(completed) / len(recs) * 100) if recs else 0, 1),
             "avg_profit": round(sum(profits) / len(profits), 2) if profits else 0,
-            "max_profit": round(max(profits), 2) if profits else 0,
-            "min_profit": round(min(profits), 2) if profits else 0
+            "max_profit": round(max(profits), 2) if profits and len(profits) > 0 else 0,
+            "min_profit": round(min(profits), 2) if profits and len(profits) > 0 else 0
         }
     
     def _get_status_badge(self, status: str) -> str:
@@ -64,6 +64,9 @@ class AuditReportGenerator:
     
     def _get_result_color(self, result_pct: float) -> str:
         """Возвращает цвет для результата."""
+        if result_pct is None:
+            result_pct = 0
+        
         if result_pct > 0:
             return f'<span class="positive">{result_pct:+.2f}%</span>'
         elif result_pct < 0:

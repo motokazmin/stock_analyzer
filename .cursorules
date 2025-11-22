@@ -251,21 +251,139 @@ All recommendation HTML files MUST follow this template structure:
 </div>
 ```
 
-### CSS Guidelines
-- **Colors**: Gradient backgrounds for sections
-  - Rating: `#667eea` to `#764ba2` (purple)
-  - Top5: `#f093fb` to `#f5576c` (pink)
-  - Watch: `#4facfe` to `#00f2fe` (cyan)
-  - Avoid: `#fa709a` to `#fee140` (orange)
-  - Summary: `#30cfd0` to `#330867` (teal)
-- **Cards**: White background with left border (4px) color-coded by signal
-- **Typography**: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
-- **Responsive**: Grid layout with `auto-fit, minmax(250px, 1fr)`
-- **Navigation**: Sticky top bar with smooth scroll
+### EXACT Format Instructions (from RECOMMENDATIONS_20251115.html)
 
-### JavaScript
-- Smooth scroll to sections on nav click
-- Must be functional without requiring external libraries
+**COPY THIS EXACT STRUCTURE:**
+
+1. **Header structure**:
+   ```html
+   <header>
+       <h1>📊 Торговые Рекомендации</h1>
+       <div class="header-subtitle">
+           <p>📅 DD месяца YYYY</p>
+           <p>🔍 Профессиональный анализ с актуальным новостным фоном</p>
+       </div>
+   </header>
+   ```
+
+2. **Navigation structure** (EXACT):
+   ```html
+   <nav>
+       <ul>
+           <li><a href="#rating">Рейтинг</a></li>
+           <li><a href="#top5">ТОП-5</a></li>
+           <li><a href="#watch">Наблюдение</a></li>
+           <li><a href="#avoid">Избегать</a></li>
+           <li><a href="#summary">Итоги</a></li>
+       </ul>
+   </nav>
+   ```
+
+3. **Section with gradient headers** (EXACT):
+   ```html
+   <section class="rating-section" id="rating">
+       <h2>🏆 Рейтинг BUY Сигналов</h2>
+       <div class="content">
+           <p style="margin-bottom: 20px; color: #666;">
+               Выявлено <strong>N четких BUY сигналов</strong>...
+           </p>
+           <!-- Stock cards here -->
+       </div>
+   </section>
+   ```
+
+4. **Stock card with news box** (EXACT):
+   ```html
+   <div class="stock-card buy">
+       <div class="stock-header">
+           <div>
+               <span class="ticker">1️⃣ TICKER (Company Name)</span>
+               <p style="color: #666; font-size: 0.85em; margin-top: 5px;">Sector</p>
+           </div>
+           <div class="price-info">
+               <span class="price">XXX.XX ₽</span>
+               <span class="change negative">-X.X%</span>
+               <span class="signal buy">🟢 BUY</span>
+           </div>
+       </div>
+       
+       <div class="news-box">
+           <h4>📰 Новостной фон</h4>
+           <p>News text... <span class="sentiment positive">🟢 ПОЗИТИВНО</span></p>
+       </div>
+       
+       <div class="indicators">
+           <div class="indicator">
+               <div class="indicator-label">Скор</div>
+               <div class="indicator-value">XX/100</div>
+           </div>
+           <!-- 4 indicators total: Скор, Тренд, RSI, Сигнал -->
+       </div>
+       
+       <div class="analysis-grid">
+           <div class="analysis-box">
+               <h4>💡 Основание</h4>
+               <p>Text...</p>
+           </div>
+           <div class="analysis-box">
+               <h4>📈 Уровни</h4>
+               <p>Поддержка: X ₽<br>Сопротивление: Y ₽<br>Расстояние: Z пункт</p>
+           </div>
+           <div class="analysis-box">
+               <h4>⚠️ Риски</h4>
+               <p>Text...</p>
+           </div>
+       </div>
+       
+       <table>
+           <tr>
+               <th>Параметр</th>
+               <th>Консервативный</th>
+               <th>Агрессивный</th>
+           </tr>
+           <tr>
+               <td><strong>Вход</strong></td>
+               <td>XXX ₽ (текущая)</td>
+               <td>YYY ₽ (откат)</td>
+           </tr>
+           <tr>
+               <td><strong>Цель 1</strong></td>
+               <td>AAA ₽ (+X%)</td>
+               <td>BBB ₽ (+Y%)</td>
+           </tr>
+           <tr>
+               <td><strong>Цель 2</strong></td>
+               <td>CCC ₽ (+Z%)</td>
+               <td>DDD ₽ (+W%)</td>
+           </tr>
+           <tr>
+               <td><strong>Стоп-лосс</strong></td>
+               <td>EEE ₽ (-P%)</td>
+               <td>FFF ₽ (-Q%)</td>
+           </tr>
+       </table>
+       
+       <div class="verdict positive">
+           ✅ ВЕРДИКТ: TEXT HERE
+       </div>
+   </div>
+   ```
+
+### CSS Key Points (from example)
+- Section h2: `padding: 20px`, `color: white`, gradient background
+- Nav: `position: sticky; top: 20px`
+- Stock-header: `display: flex` (NOT grid!)
+- Indicators: `display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))`
+- Analysis-grid: `grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))`
+- Content: `padding: 30px` inside sections
+- Footer: class="footer" (NOT <footer> tag)
+
+### Color Gradients (EXACT)
+- `rating-section h2`: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
+- `top5-section h2`: `linear-gradient(135deg, #f093fb 0%, #f5576c 100%)`
+- `watch-section h2`: `linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)`
+- `avoid-section h2`: `linear-gradient(135deg, #fa709a 0%, #fee140 100%)`
+- `summary-section h2`: `linear-gradient(135deg, #30cfd0 0%, #330867 100%)`
 
 ## 📋 Workflow
 

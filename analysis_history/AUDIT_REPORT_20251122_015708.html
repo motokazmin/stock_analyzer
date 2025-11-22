@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аудит Рекомендаций - 22.11.2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        section h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
+        .section-content {
+            padding: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .positive {
+            color: #22c55e;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        .neutral {
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .rec-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ticker {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .rec-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .detail {
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            color: #1e3c72;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        
+        footer {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .rec-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Аудит Торговых Рекомендаций</h1>
+            <p>📅 Дата отчёта: 22.11.2025 01:57</p>
+            <p>📈 Всего рекомендаций: 16</p>
+        </header>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h3>✅ Выполнено</h3>
+                <div class="number">0</div>
+            </div>
+            <div class="stat-box">
+                <h3>❌ Провалено</h3>
+                <div class="number">0</div>
+            </div>
+            <div class="stat-box">
+                <h3>🟡 Активно</h3>
+                <div class="number">16</div>
+            </div>
+            <div class="stat-box">
+                <h3>📈 Процент успеха</h3>
+                <div class="number">0.0%</div>
+            </div>
+            <div class="stat-box">
+                <h3>💰 Средний результат</h3>
+                <div class="number">+0.00%</div>
+            </div>
+            <div class="stat-box">
+                <h3>🎯 Максимум</h3>
+                <div class="number">+0.00%</div>
+            </div>
+        </div>
+        
+        <!-- ВЫПОЛНЕННЫЕ -->
+        <section>
+            <h2>✅ Выполненные рекомендации (0)</h2>
+            <div class="section-content">
+                <p>Нет выполненных рекомендаций</p>
+            </div>
+        </section>
+        
+        <!-- АКТИВНЫЕ -->
+        <section>
+            <h2>🟡 Активные рекомендации (16)</h2>
+            <div class="section-content">
+                
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">LEAS</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-16</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">577.40 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">678.32 / 779.23 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">517.15 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">60.00 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Сильный восход. тренд (+40)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">X5</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-16</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">2702.50 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">3357.75 / 4013.00 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">2299.08 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">56.55 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">SBER</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-16</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">297.44 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">321.49 / 345.53 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">271.34 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">52.54 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">GAZP</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">127.06 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">141.43 / 155.80 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">112.18 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">64.31 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">TATN</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">626.00 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">693.98 / 761.97 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">577.42 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">65.31 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">DELI</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">122.75 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">169.88 / 217.02 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">97.02 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">56.65 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">LEAS</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">566.10 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">677.34 / 788.58 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">496.91 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">52.00 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">CHMF</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">931.60 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">1083.73 / 1235.87 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">907.87 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">58.58 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">SVCB</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">13.15 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">16.32 / 19.48 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">11.42 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">60.25 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">RUAL</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">30.57 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">35.40 / 40.23 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">27.76 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">53.20 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">AFLT</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">54.71 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">68.12 / 81.53 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">47.07 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">59.33 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">SBER</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">306.70 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">326.85 / 347.00 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">278.98 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">60.89 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">MTLR</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">70.77 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">83.77 / 96.77 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">67.88 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">59.39 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">X5</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">2711.00 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">3366.25 / 4021.50 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">2299.08 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">56.33 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">TTLK</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">0.59 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">0.68 / 0.78 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">0.53 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">54.07 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            <div class="rec-card">
+                <div class="rec-header">
+                    <span class="ticker">SIBN</span>
+                    <span class="badge badge-warning">🟡 АКТИВНА</span>
+                    <span class="neutral">0.00%</span>
+                </div>
+                <div class="rec-details">
+                    <div class="detail">
+                        <div class="detail-label">Дата</div>
+                        <div class="detail-value">2025-11-22</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Сигнал</div>
+                        <div class="detail-value">BUY</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цена входа</div>
+                        <div class="detail-value">495.15 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Цель 1 / 2</div>
+                        <div class="detail-value">548.98 / 602.82 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">Стоп-лосс</div>
+                        <div class="detail-value">475.30 ₽</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">RSI / Тренд</div>
+                        <div class="detail-value">58.33 / UP</div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px; color: #666; font-size: 0.9em;"><strong>💬</strong> Умеренный восход. тренд (+25)</p>
+            </div>
+            
+            </div>
+        </section>
+        
+        <!-- ПРОВАЛЕНЫ -->
+        <section>
+            <h2>❌ Провалены рекомендации (0)</h2>
+            <div class="section-content">
+                <p>Нет провалены рекомендаций</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>🔍 Аудит создан автоматически системой анализа акций</p>
+            <p>📌 Следующий аудит: 22.11.2025</p>
+        </footer>
+    </div>
+</body>
+</html>
